@@ -29,23 +29,30 @@ def main() -> None:
         default="config/default.yaml",
         help="Path to the YAML config (default: config/default.yaml)",
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--skip-perturb",
         action="store_true",
         help="Only build the faithful trios; do not run the perturbation engine.",
+    )
+    mode.add_argument(
+        "--perturb-only",
+        action="store_true",
+        help="Skip building trios; perturb the existing trios.jsonl into the test set.",
     )
     args = parser.parse_args()
 
     with open(args.config, encoding="utf-8") as fh:
         config = yaml.safe_load(fh)
 
-    trios = build_trios(config)
-    print(f"source_dataset : {config['source_dataset']}")
-    print(f"kept trios     : {len(trios)}")
-    print(f"written to     : {config['paths']['trios']}")
-
-    if args.skip_perturb:
-        return
+    trios = None
+    if not args.perturb_only:
+        trios = build_trios(config)
+        print(f"source_dataset : {config['source_dataset']}")
+        print(f"kept trios     : {len(trios)}")
+        print(f"written to     : {config['paths']['trios']}")
+        if args.skip_perturb:
+            return
 
     rows = build_dataset(config, trios)
     counts = Counter(r["perturbation_type"] for r in rows)
