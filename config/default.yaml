@@ -12,9 +12,15 @@ paths:
   tables_dir: results/tables
   figures_dir: results/figures
 
-# Source dataset to load and normalise (chosen for real in Phase 3).
-source_dataset: finqa        # one of: finqa | tatqa | convfinqa | financebench
-max_examples: 800            # cap on faithful trios kept
+# Source dataset to load and normalise.
+source_dataset: financebench   # one of: financebench | finqa | tatqa | convfinqa
+max_examples: 800              # cap on faithful trios kept (FinanceBench has 150)
+
+# Per-source loading settings.
+source:
+  financebench:
+    hf_path: PatronusAI/financebench   # CC-BY-NC-4.0; loaded from HF, not redistributed
+    hf_split: train
 
 # Answer-breaking engine (Phase 4).
 perturbations:
