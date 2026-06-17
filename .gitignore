@@ -225,3 +225,7 @@ CLAUDE.md
 # Generated datasets — derived from CC-BY-NC source data (FinanceBench);
 # regenerated from Hugging Face via scripts/01_build_dataset.py, not redistributed.
 data/processed/*.jsonl
+
+# Cached raw detector outputs — regenerable, derived from the NC dataset.
+# (Aggregate results/metrics.json is committed; the per-row cache is not.)
+results/raw/
