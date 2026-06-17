@@ -1,0 +1,42 @@
+# NumFaith default configuration.
+# Placeholder values; filled in by later phases (dataset choice in Phase 3,
+# detector wiring in Phase 6). Override by copying and pointing the scripts at
+# a different YAML.
+
+paths:
+  raw_dir: data/raw                              # downloaded source QA (gitignored)
+  processed_dir: data/processed
+  trios: data/processed/trios.jsonl              # faithful (source, question, answer) trios
+  testset: data/processed/numfaith_testset.jsonl # faithful + perturbed test set
+  results_dir: results
+  tables_dir: results/tables
+  figures_dir: results/figures
+
+# Source dataset to load and normalise (chosen for real in Phase 3).
+source_dataset: finqa        # one of: finqa | tatqa | convfinqa | financebench
+max_examples: 800            # cap on faithful trios kept
+
+# Answer-breaking engine (Phase 4).
+perturbations:
+  seed: 42
+  enabled:
+    - number_swap
+    - date_shift
+    - unit_currency
+    - direction_flip
+    - entity_swap
+  # Threshold separating a "subtle" numeric change from a "gross" one,
+  # as a relative fraction of the original value.
+  subtle_gross_threshold: 0.10
+
+# Faithfulness detectors to run (wired in Phase 6).
+detectors:
+  enabled:
+    - lettucedetect
+    - nli
+    - ragas
+    - llm_judge
+  # LLM judge reads its API key from an environment variable, never committed.
+  llm_judge:
+    model: gpt-4.1-mini
+    api_key_env: OPENAI_API_KEY
