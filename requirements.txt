@@ -19,3 +19,4 @@ transformers>=4.40         # NLI / DeBERTa-MNLI entailment baseline
 torch>=2.0                 # backend for transformers / lettucedetect
 sentencepiece>=0.1.99      # DeBERTa-v3 tokenizer
 protobuf>=3.20             # DeBERTa-v3 tokenizer
+openai>=1.0                # LLM-judge reference detector
