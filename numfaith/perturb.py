@@ -218,8 +218,52 @@ def perturb_date(trio: dict, rng: random.Random) -> list[dict]:
     return []
 
 
+_SCALE_RE = re.compile(r"\b(?:thousand|million|billion|trillion)s?\b", re.IGNORECASE)
+_SCALE_SWAP = {
+    "thousand": "million", "million": "billion", "billion": "million", "trillion": "billion",
+}
+_CURRENCY_WORD_RE = re.compile(r"\b(?:dollars?|euros?|pounds?|USD|EUR|GBP)\b", re.IGNORECASE)
+_CURRENCY_WORD_SWAP = {
+    "dollar": "euro", "euro": "pound", "pound": "dollar",
+    "usd": "eur", "eur": "gbp", "gbp": "usd",
+}
+_CURRENCY_SYM_RE = re.compile(r"[$€£]")
+_CURRENCY_SYM_SWAP = {"$": "€", "€": "£", "£": "$"}
+
+
+def _swap_word(token: str, mapping: dict) -> str:
+    """Map a (possibly plural, any-case) word via ``mapping``, preserving plural + case."""
+    low = token.lower()
+    plural = low.endswith("s") and low[:-1] in mapping
+    base = low[:-1] if plural else low
+    repl = mapping[base] + ("s" if plural else "")
+    return _recase(repl, token)
+
+
+def perturb_unit_currency(trio: dict, rng: random.Random) -> list[dict]:
+    """Swap a scale word (million↔billion) or currency (symbol or word)."""
+    answer, source = trio["answer"], trio["source_text"]
+    edits: list[tuple[re.Match, str]] = []
+    for m in _SCALE_RE.finditer(answer):
+        edits.append((m, _swap_word(m.group(0), _SCALE_SWAP)))
+    for m in _CURRENCY_WORD_RE.finditer(answer):
+        edits.append((m, _swap_word(m.group(0), _CURRENCY_WORD_SWAP)))
+    for m in _CURRENCY_SYM_RE.finditer(answer):
+        edits.append((m, _CURRENCY_SYM_SWAP[m.group(0)]))
+    if not edits:
+        return []
+    rng.shuffle(edits)
+    for m, new_token in edits:
+        token = m.group(0)
+        if new_token == token or _in_source(new_token, source):
+            continue
+        return [_make_row(trio, _apply(answer, m, new_token), "unit_currency", token, new_token)]
+    return []
+
+
 # Registry: maps a config perturbation name to its function. Extended as types are added.
 PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "number_swap": perturb_number,
     "date_shift": perturb_date,
+    "unit_currency": perturb_unit_currency,
 }
