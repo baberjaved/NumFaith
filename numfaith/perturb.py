@@ -293,10 +293,61 @@ def perturb_direction(trio: dict, rng: random.Random) -> list[dict]:
     return []
 
 
+_METRICS = [
+    "free cash flow", "operating cash flow", "capital expenditure", "gross margin",
+    "operating margin", "operating income", "net income", "net sales", "gross profit",
+    "total assets", "total liabilities", "total debt", "cash flow", "revenue", "EBITDA",
+]
+_COMPANIES = [
+    "3M", "Apple", "Amazon", "Microsoft", "Pfizer", "Johnson & Johnson", "PepsiCo",
+    "Coca-Cola", "CVS Health", "Amcor", "Costco", "Verizon", "Nike", "Oracle", "Walmart",
+    "Adobe", "Netflix", "Boeing", "Lockheed Martin", "General Mills", "Kraft Heinz",
+]
+
+
+def _phrase_re(pool: list[str]) -> re.Pattern:
+    alts = "|".join(re.escape(p) for p in sorted(pool, key=len, reverse=True))
+    return re.compile(r"\b(?:" + alts + r")\b", re.IGNORECASE)
+
+
+_METRIC_RE = _phrase_re(_METRICS)
+_COMPANY_RE = _phrase_re(_COMPANIES)
+
+
+def _recase_phrase(alt: str, like: str) -> str:
+    if alt.isupper():  # acronym (e.g. EBITDA) — leave as-is
+        return alt
+    if like[:1].isupper():
+        return alt[:1].upper() + alt[1:]
+    return alt
+
+
+def perturb_entity(trio: dict, rng: random.Random) -> list[dict]:
+    """Swap a financial metric or company name for a different one absent from source."""
+    answer, source = trio["answer"], trio["source_text"]
+    for regex, pool, preserve_case in (
+        (_METRIC_RE, _METRICS, True),
+        (_COMPANY_RE, _COMPANIES, False),
+    ):
+        matches = list(regex.finditer(answer))
+        rng.shuffle(matches)
+        for m in matches:
+            token = m.group(0)
+            alts = [x for x in pool if x.lower() != token.lower()]
+            rng.shuffle(alts)
+            for alt in alts:
+                repl = _recase_phrase(alt, token) if preserve_case else alt
+                if _in_source(repl, source):
+                    continue
+                return [_make_row(trio, _apply(answer, m, repl), "entity_swap", token, repl)]
+    return []
+
+
 # Registry: maps a config perturbation name to its function. Extended as types are added.
 PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "number_swap": perturb_number,
     "date_shift": perturb_date,
     "unit_currency": perturb_unit_currency,
     "direction_flip": perturb_direction,
+    "entity_swap": perturb_entity,
 }
