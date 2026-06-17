@@ -149,7 +149,77 @@ def perturb_number(
     return rows
 
 
+_YEAR = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+_QUARTER = re.compile(r"\bQ([1-4])\b", re.IGNORECASE)
+_MONTHS_FULL = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+_MONTHS_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+_MONTH_RE = re.compile(
+    r"\b(?:" + "|".join(_MONTHS_FULL + ["Sept"] + _MONTHS_ABBR) + r")\b", re.IGNORECASE
+)
+
+
+def _recase(word: str, like: str) -> str:
+    """Return ``word`` cased like ``like`` (UPPER / Title / lower)."""
+    if like.isupper():
+        return word.upper()
+    if like[:1].isupper():
+        return word.capitalize()
+    return word.lower()
+
+
+def _month_candidates(token: str, rng: random.Random) -> list[str]:
+    low = token.lower().rstrip(".")
+    is_abbr = len(low) <= 4
+    pool = _MONTHS_ABBR if is_abbr else _MONTHS_FULL
+    idx = next(
+        (i for i, (a, f) in enumerate(zip(_MONTHS_ABBR, _MONTHS_FULL))
+         if low == f.lower() or low.startswith(a.lower())),
+        None,
+    )
+    others = [i for i in range(12) if i != idx]
+    rng.shuffle(others)
+    return [_recase(pool[i], token) for i in others]
+
+
+def _date_candidates(kind: str, token: str, m: re.Match, rng: random.Random) -> list[str]:
+    if kind == "year":
+        y = int(token)
+        deltas = [-1, 1, -2, 2, -3, 3]
+        rng.shuffle(deltas)
+        return [str(y + d) for d in deltas if 1900 <= y + d <= 2099]
+    if kind == "quarter":
+        q = int(m.group(1))
+        others = [i for i in (1, 2, 3, 4) if i != q]
+        rng.shuffle(others)
+        return [token[0] + str(i) for i in others]  # preserve Q/q case
+    return _month_candidates(token, rng)
+
+
+def perturb_date(trio: dict, rng: random.Random) -> list[dict]:
+    """Shift a year, quarter, or month to a different in-kind value."""
+    answer, source = trio["answer"], trio["source_text"]
+    targets = (
+        [("year", m) for m in _YEAR.finditer(answer)]
+        + [("quarter", m) for m in _QUARTER.finditer(answer)]
+        + [("month", m) for m in _MONTH_RE.finditer(answer)]
+    )
+    if not targets:
+        return []
+    rng.shuffle(targets)
+    for kind, m in targets:
+        token = m.group(0)
+        for new_token in _date_candidates(kind, token, m, rng):
+            if new_token == token or _in_source(new_token, source):
+                continue
+            return [_make_row(trio, _apply(answer, m, new_token), "date_shift", token, new_token)]
+    return []
+
+
 # Registry: maps a config perturbation name to its function. Extended as types are added.
 PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "number_swap": perturb_number,
+    "date_shift": perturb_date,
 }
