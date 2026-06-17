@@ -221,3 +221,7 @@ __marimo__/
 docs/
 .claude/
 CLAUDE.md
+
+# Generated datasets — derived from CC-BY-NC source data (FinanceBench);
+# regenerated from Hugging Face via scripts/01_build_dataset.py, not redistributed.
+data/processed/*.jsonl
