@@ -13,8 +13,5 @@ matplotlib>=3.7
 # test
 pytest>=7.4
 
-# --- detector packages (added in Phase 6) ---
-# lettucedetect
-# transformers           # NLI / DeBERTa-MNLI entailment baseline
-# ragas                  # RAGAS faithfulness metric
-# openai                 # LLM-judge reference
+# --- detector packages ---
+lettucedetect>=0.1.4       # pretrained ModernBERT span-level hallucination detector

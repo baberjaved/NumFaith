@@ -35,13 +35,18 @@ perturbations:
   # as a relative fraction of the original value.
   subtle_gross_threshold: 0.10
 
-# Faithfulness detectors to run (wired in Phase 6).
+# Faithfulness detectors to run. (RAGAS dropped — API-volatile and duplicates the
+# LLM-judge's LLM-based signal.)
 detectors:
   enabled:
     - lettucedetect
     - nli
-    - ragas
     - llm_judge
+  lettucedetect:
+    model_path: KRLabsOrg/lettucedect-base-modernbert-en-v1
+  nli:
+    model: MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli
+    threshold: 0.5            # P(entailment) below this -> unfaithful
   # LLM judge reads its API key from an environment variable, never committed.
   llm_judge:
     model: gpt-4.1-mini
