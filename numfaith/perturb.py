@@ -16,7 +16,9 @@ single seeded ``random.Random`` so the test set is reproducible.
 
 from __future__ import annotations
 
+import json
 import random
+from pathlib import Path
 from typing import Callable, Optional
 
 import regex as re
@@ -343,7 +345,7 @@ def perturb_entity(trio: dict, rng: random.Random) -> list[dict]:
     return []
 
 
-# Registry: maps a config perturbation name to its function. Extended as types are added.
+# Registry: maps a config perturbation name to its function.
 PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "number_swap": perturb_number,
     "date_shift": perturb_date,
@@ -351,3 +353,57 @@ PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "direction_flip": perturb_direction,
     "entity_swap": perturb_entity,
 }
+
+
+# ------------------------------------------------------------------------- orchestrator
+
+
+def _faithful_row(trio: dict) -> dict:
+    """The unperturbed original, carried into the test set as a ``faithful`` negative."""
+    return {
+        "id": trio["id"],
+        "source_text": trio["source_text"],
+        "question": trio["question"],
+        "answer": trio["answer"],
+        "label": "faithful",
+        "perturbation_type": "none",
+        "original": None,
+        "replacement": None,
+        "magnitude": None,
+        "source_dataset": trio.get("source_dataset"),
+    }
+
+
+def build_dataset(config: dict, trios: Optional[list[dict]] = None) -> list[dict]:
+    """Run all enabled perturbations over every trio and write the full test set.
+
+    Emits each faithful original plus every labelled broken variant to
+    ``config['paths']['testset']`` and returns the rows.
+    """
+    if trios is None:
+        with open(config["paths"]["trios"], encoding="utf-8") as fh:
+            trios = [json.loads(line) for line in fh]
+
+    pcfg = config.get("perturbations", {})
+    rng = random.Random(pcfg.get("seed", 42))
+    enabled = pcfg.get("enabled", list(PERTURBATIONS))
+    threshold = pcfg.get("subtle_gross_threshold", DEFAULT_SUBTLE_GROSS_THRESHOLD)
+
+    rows: list[dict] = []
+    for trio in trios:
+        rows.append(_faithful_row(trio))
+        for name in enabled:
+            fn = PERTURBATIONS.get(name)
+            if fn is None:
+                continue
+            if name == "number_swap":
+                rows.extend(fn(trio, rng, threshold))
+            else:
+                rows.extend(fn(trio, rng))
+
+    out_path = Path(config["paths"]["testset"])
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as fh:
+        for row in rows:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return rows
