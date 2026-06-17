@@ -261,9 +261,42 @@ def perturb_unit_currency(trio: dict, rng: random.Random) -> list[dict]:
     return []
 
 
+_DIRECTION_PAIRS = [
+    ("rose", "fell"), ("rise", "fall"), ("increased", "decreased"), ("increase", "decrease"),
+    ("up", "down"), ("gain", "loss"), ("gains", "losses"), ("gained", "lost"),
+    ("grew", "shrank"), ("growth", "decline"), ("higher", "lower"), ("improved", "worsened"),
+    ("expanded", "contracted"), ("positive", "negative"), ("above", "below"),
+    ("strengthened", "weakened"), ("outperformed", "underperformed"),
+]
+_DIRECTION_SWAP: dict[str, str] = {}
+for _a, _b in _DIRECTION_PAIRS:
+    _DIRECTION_SWAP[_a] = _b
+    _DIRECTION_SWAP[_b] = _a
+_DIRECTION_RE = re.compile(
+    r"\b(?:" + "|".join(sorted(_DIRECTION_SWAP, key=len, reverse=True)) + r")\b", re.IGNORECASE
+)
+
+
+def perturb_direction(trio: dict, rng: random.Random) -> list[dict]:
+    """Flip a direction word to its antonym (rose↔fell, increased↔decreased, …)."""
+    answer, source = trio["answer"], trio["source_text"]
+    matches = list(_DIRECTION_RE.finditer(answer))
+    if not matches:
+        return []
+    rng.shuffle(matches)
+    for m in matches:
+        token = m.group(0)
+        repl = _recase(_DIRECTION_SWAP[token.lower()], token)
+        if repl == token or _in_source(repl, source):
+            continue
+        return [_make_row(trio, _apply(answer, m, repl), "direction_flip", token, repl)]
+    return []
+
+
 # Registry: maps a config perturbation name to its function. Extended as types are added.
 PERTURBATIONS: dict[str, Callable[..., list[dict]]] = {
     "number_swap": perturb_number,
     "date_shift": perturb_date,
     "unit_currency": perturb_unit_currency,
+    "direction_flip": perturb_direction,
 }
