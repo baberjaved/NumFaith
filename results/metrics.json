@@ -1,0 +1,138 @@
+{
+  "n_faithful": 126,
+  "n_broken": 398,
+  "detectors": {
+    "lettucedetect": {
+      "status": "ok",
+      "overall": {
+        "n": 524,
+        "precision": 0.78,
+        "recall": 0.8819095477386935,
+        "f1": 0.8278301886792453,
+        "balanced_accuracy": 0.5480976310122039
+      },
+      "faithful_fpr": 0.7857142857142857,
+      "by_type": {
+        "date_shift": {
+          "n": 177,
+          "precision": 0.3219178082191781,
+          "recall": 0.9215686274509803,
+          "f1": 0.47715736040609136,
+          "balanced_accuracy": 0.5679271708683473
+        },
+        "direction_flip": {
+          "n": 151,
+          "precision": 0.16806722689075632,
+          "recall": 0.8,
+          "f1": 0.2777777777777778,
+          "balanced_accuracy": 0.5071428571428571
+        },
+        "entity_swap": {
+          "n": 161,
+          "precision": 0.2204724409448819,
+          "recall": 0.8,
+          "f1": 0.345679012345679,
+          "balanced_accuracy": 0.5071428571428571
+        },
+        "number_swap": {
+          "n": 373,
+          "precision": 0.6886792452830188,
+          "recall": 0.8866396761133604,
+          "f1": 0.7752212389380531,
+          "balanced_accuracy": 0.5504626951995373
+        },
+        "unit_currency": {
+          "n": 166,
+          "precision": 0.27205882352941174,
+          "recall": 0.925,
+          "f1": 0.42045454545454547,
+          "balanced_accuracy": 0.5696428571428571
+        }
+      },
+      "by_magnitude": {
+        "subtle": {
+          "n": 248,
+          "precision": 0.5240384615384616,
+          "recall": 0.8934426229508197,
+          "f1": 0.6606060606060606,
+          "balanced_accuracy": 0.5538641686182669
+        },
+        "gross": {
+          "n": 251,
+          "precision": 0.5263157894736842,
+          "recall": 0.88,
+          "f1": 0.6586826347305389,
+          "balanced_accuracy": 0.5471428571428572
+        }
+      }
+    },
+    "nli": {
+      "status": "ok",
+      "overall": {
+        "n": 524,
+        "precision": 0.7848699763593381,
+        "recall": 0.8341708542713567,
+        "f1": 0.8087697929354446,
+        "balanced_accuracy": 0.5559743160245673
+      },
+      "faithful_fpr": 0.7222222222222222,
+      "by_type": {
+        "date_shift": {
+          "n": 177,
+          "precision": 0.32592592592592595,
+          "recall": 0.8627450980392157,
+          "f1": 0.4731182795698925,
+          "balanced_accuracy": 0.5702614379084967
+        },
+        "direction_flip": {
+          "n": 151,
+          "precision": 0.1875,
+          "recall": 0.84,
+          "f1": 0.30656934306569344,
+          "balanced_accuracy": 0.5588888888888889
+        },
+        "entity_swap": {
+          "n": 161,
+          "precision": 0.23529411764705882,
+          "recall": 0.8,
+          "f1": 0.36363636363636365,
+          "balanced_accuracy": 0.538888888888889
+        },
+        "number_swap": {
+          "n": 373,
+          "precision": 0.6925675675675675,
+          "recall": 0.8299595141700404,
+          "f1": 0.7550644567219152,
+          "balanced_accuracy": 0.5538686459739091
+        },
+        "unit_currency": {
+          "n": 166,
+          "precision": 0.272,
+          "recall": 0.85,
+          "f1": 0.4121212121212121,
+          "balanced_accuracy": 0.5638888888888889
+        }
+      },
+      "by_magnitude": {
+        "subtle": {
+          "n": 248,
+          "precision": 0.5235602094240838,
+          "recall": 0.819672131147541,
+          "f1": 0.6389776357827476,
+          "balanced_accuracy": 0.5487249544626593
+        },
+        "gross": {
+          "n": 251,
+          "precision": 0.5357142857142857,
+          "recall": 0.84,
+          "f1": 0.6542056074766355,
+          "balanced_accuracy": 0.5588888888888889
+        }
+      }
+    },
+    "llm_judge": {
+      "status": "skipped",
+      "reason": "no API key in $OPENAI_API_KEY"
+    }
+  }
+}
