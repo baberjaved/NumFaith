@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-local / assistant files (not for version control)
+docs/
+.claude/
+CLAUDE.md
